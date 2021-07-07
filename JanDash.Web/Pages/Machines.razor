@@ -13,13 +13,13 @@
         <CardBody>
             <CardTitle>Memory</CardTitle>
             <Progress>
-                <ProgressBar Background="Background.Danger" Value="(int)((double)ThisMachine.MemoryInfo.Used / ThisMachine.Info.PhysicalRam * 1000)" Max="1000"/>
-                <ProgressBar Background="Background.Success" Value="(int)((double)ThisMachine.MemoryInfo.Free / ThisMachine.Info.PhysicalRam * 1000)" Max="1000"/>
+                <ProgressBar Background="Background.Danger" Value="(int)((double)ThisMachine.Info.MemoryUsed / ThisMachine.PersistentInfo.PhysicalRam * 1000)" Max="1000"/>
+                <ProgressBar Background="Background.Success" Value="(int)((double)ThisMachine.Info.MemoryFree / ThisMachine.PersistentInfo.PhysicalRam * 1000)" Max="1000"/>
             </Progress>
             <ul>
-                <li>Total: @FormatSize(ThisMachine.Info.PhysicalRam)</li>
-                <li>Used: @FormatSize(ThisMachine.MemoryInfo.Used)</li>
-                <li>Free: @FormatSize(ThisMachine.MemoryInfo.Free)</li>
+                <li>Total: @FormatSize(ThisMachine.PersistentInfo.PhysicalRam)</li>
+                <li>Used: @FormatSize(ThisMachine.Info.MemoryUsed)</li>
+                <li>Free: @FormatSize(ThisMachine.Info.MemoryFree)</li>
             </ul>
 
             <LineChart @ref="memoryLineChart" TItem="ulong" OptionsObject="new { responsive = true, maintainAspectRatio = true }"/>
@@ -35,7 +35,7 @@
         <CardBody>
             <CardTitle>Other</CardTitle>
             <p>
-                <b>(UTC) Last boot:</b> @(DateTimeOffset.FromUnixTimeSeconds(ThisMachine.OtherInfo.BootTimestamp).ToString("dd/MM/yyyy hh:mm:ss"))<br/>
+                <b>(UTC) Last boot:</b> @(DateTimeOffset.FromUnixTimeSeconds(ThisMachine.Info.BootTimestamp).ToString("dd/MM/yyyy hh:mm:ss"))<br/>
                 <b>(UTC) Last contact:</b> @(DateTimeOffset.FromUnixTimeSeconds(ThisMachine.LastContact).ToString("dd/MM/yyyy hh:mm:ss"))
             </p>
         </CardBody>
@@ -71,9 +71,8 @@
 
     public static Machine EmptyMachine { get; } = new Machine()
     {
+        PersistentInfo = new(),
         Info = new(),
-        MemoryInfo = new(),
-        OtherInfo = new(),
     };
 
     public LineChart<ulong> memoryLineChart { get; set; }
@@ -92,7 +91,7 @@
         changed = async () =>
         {
             await InvokeAsync(StateHasChanged);
-            await memoryLineChart.AddData(0, ThisMachine.MemoryInfo.Used / 1000 / 1000);
+            await memoryLineChart.AddData(0, ThisMachine.Info.MemoryUsed / 1000 / 1000);
             if (usedMemoryData.Data.Count > 20)
             {
                 await memoryLineChart.ShiftData(0);

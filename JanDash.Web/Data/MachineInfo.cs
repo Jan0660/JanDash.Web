@@ -1,13 +1,12 @@
-﻿namespace JanDash.Data
+﻿using MongoDB.Bson.Serialization.Attributes;
+
+namespace JanDash.Data
 {
-    /// <summary>
-    /// For "presistent" information about a <see cref="Machine"/>, e.g. RAM size, OS...
-    /// </summary>
+    [BsonIgnoreExtraElements]
     public class MachineInfo
     {
-        /// <summary>
-        /// Physical RAM size, in bytes
-        /// </summary>
-        public ulong PhysicalRam { get; set; }
+        public ulong MemoryUsed { get; set; }
+        public ulong MemoryFree { get; set; }
+        public long BootTimestamp { get; set; }
     }
 }

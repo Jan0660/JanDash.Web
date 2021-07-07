@@ -14,10 +14,9 @@ namespace JanDash.Data
         public string Name { get; set; }
         public string MachineId { get; set; }
         public string OwnerId { get; set; }
-        public MachineInfo Info { get; set; }
+        public MachinePersistentInfo PersistentInfo { get; set; }
         public string Token { get; set; }
-        public MachineMemoryInfo MemoryInfo { get; set; }
-        public MachineOtherInfo OtherInfo { get; set; }
+        public MachineInfo Info { get; set; }
         [JsonIgnore] [BsonIgnore] public List<Func<Task>> Changed { get; } = new();
         [BsonIgnore] public long LastContact { get; private set; }
 
@@ -27,8 +26,8 @@ namespace JanDash.Data
 
         public Machine(string name, string ownerId)
         {
-            (Name, OwnerId, MachineId, Info, Token, MemoryInfo, OtherInfo) =
-                (name, ownerId, Ulid.NewUlid().ToString(), new(), AuthToken.Generate(), new(), new());
+            (Name, OwnerId, MachineId, PersistentInfo, Token, Info) =
+                (name, ownerId, Ulid.NewUlid().ToString(), new(), AuthToken.Generate(), new());
         }
 
         public Task UpdateAsync()

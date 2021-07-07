@@ -35,7 +35,8 @@ namespace JanDash
                         MachinesStore = res.Result.ConvertAll(doc =>
                         {
                             var i = BsonSerializer.Deserialize<Machine>(doc);
-                            i.OtherInfo ??= new();
+                            i.PersistentInfo ??= new();
+                            i.Info ??= new();
                             return i;
                         }).ToList();
                         Console.WriteLine("Loaded machines.");

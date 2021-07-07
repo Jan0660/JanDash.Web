@@ -17,22 +17,15 @@ namespace JanDash.Controllers
         public async Task UpdatePersistent(string id, string token)
         {
             var machine = GetMachine(id, token);
-            machine.Info = await JsonSerializer.DeserializeAsync<MachineInfo>(Request.Body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            machine.PersistentInfo = await JsonSerializer.DeserializeAsync<MachinePersistentInfo>(Request.Body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
             await machine.UpdateAsync();
             machine.Updated();
         }
-        [HttpPost("{id}/{token}/updateOther")]
+        [HttpPost("{id}/{token}/update")]
         public async Task UpdateOther(string id, string token)
         {
             var machine = GetMachine(id, token);
-            machine.OtherInfo = await JsonSerializer.DeserializeAsync<MachineOtherInfo>(Request.Body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
-            machine.Updated();
-        }
-        [HttpPost("{id}/{token}/updateMemory")]
-        public async Task UpdateMemory(string id, string token)
-        {
-            var machine = GetMachine(id, token);
-            machine.MemoryInfo = await JsonSerializer.DeserializeAsync<MachineMemoryInfo>(Request.Body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            machine.Info = await JsonSerializer.DeserializeAsync<MachineInfo>(Request.Body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
             machine.Updated();
         }
     }
