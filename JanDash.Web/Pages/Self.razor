@@ -1,0 +1,74 @@
+﻿@page "/Self"
+@inject ILocalStorageService localStorage
+@inject JanDashService dash
+<h1>You</h1>
+
+Profile shit when????????
+
+<Button Color="Color.Danger" Clicked="LogOut">Log out</Button>
+
+<Button Color="Color.Danger" Clicked="ChangePasswordModal">Change password</Button>
+
+log out all sessions when???
+
+<Modal @ref="modalRef">
+    <ModalContent Centered="true">
+        <ModalHeader>
+            <ModalTitle>Change password</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>New password</FieldLabel>
+                <TextEdit @ref="NewPasswordField" Placeholder="Enter new password..." Role="TextRole.Password" />
+            </Field>
+            <Field>
+                <FieldLabel>Confirm new password</FieldLabel>
+                <TextEdit @ref="ConfirmNewPasswordField" Placeholder="Confirm new password..." Role="TextRole.Password" />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideChangePasswordModal">Cancel</Button>
+            <Button Color="Color.Primary" Clicked="@ChangePassword">Save Changes</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    private Modal modalRef;
+    public TextEdit NewPasswordField { get; set; }
+    public TextEdit ConfirmNewPasswordField { get; set; }
+    private string failText { get; set; }
+
+    private async Task LogOut()
+    {
+        var self = await dash.GetSelf();
+        self.Tokens.Remove(await localStorage.GetItemAsStringAsync("jandash-token"));
+        await localStorage.RemoveItemAsync("jandash-token");
+        await self.UpdateAsync();
+    }
+
+    private void ChangePasswordModal()
+    {
+        modalRef.Show();
+    }
+
+    private void HideChangePasswordModal()
+    {
+        modalRef.Hide();
+    }
+
+    private async Task ChangePassword()
+    {
+        if (NewPasswordField.Text != ConfirmNewPasswordField.Text)
+        {
+            failText = "Passwords don't match.";
+            return;
+        }
+        var self = await dash.GetSelf();
+        self.Password = SecurePasswordHasher.Hash(NewPasswordField.Text ?? "");
+        await self.UpdateAsync();
+        HideChangePasswordModal();
+    }
+
+}

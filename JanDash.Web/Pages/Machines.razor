@@ -1,0 +1,158 @@
+@page "/machines/{Id}"
+@inject JanDashService dash
+@inject NavigationManager NavigationManager
+@inject ClipboardService clipboard
+@using JanDash.Data
+@implements IDisposable;
+
+<h1>@ThisMachine.Name</h1>
+<p>Id: @ThisMachine.MachineId</p>
+
+<div class="memoryCard">
+    <Card>
+        <CardBody>
+            <CardTitle>Memory</CardTitle>
+            <Progress>
+                <ProgressBar Background="Background.Danger" Value="(int)((double)ThisMachine.MemoryInfo.Used / ThisMachine.Info.PhysicalRam * 1000)" Max="1000"/>
+                <ProgressBar Background="Background.Success" Value="(int)((double)ThisMachine.MemoryInfo.Free / ThisMachine.Info.PhysicalRam * 1000)" Max="1000"/>
+            </Progress>
+            <ul>
+                <li>Total: @FormatSize(ThisMachine.Info.PhysicalRam)</li>
+                <li>Used: @FormatSize(ThisMachine.MemoryInfo.Used)</li>
+                <li>Free: @FormatSize(ThisMachine.MemoryInfo.Free)</li>
+            </ul>
+
+            <LineChart @ref="memoryLineChart" TItem="ulong" OptionsObject="new { responsive = true, maintainAspectRatio = true }"/>
+            @* Style="width: 50%; height: 50%;" *@
+        </CardBody>
+    </Card>
+</div>
+
+<div style="padding-top: 12px;"></div>
+
+<div style="max-width: 640px;">
+    <Card>
+        <CardBody>
+            <CardTitle>Other</CardTitle>
+            <p>
+                <b>(UTC) Last boot:</b> @(DateTimeOffset.FromUnixTimeSeconds(ThisMachine.OtherInfo.BootTimestamp).ToString("dd/MM/yyyy hh:mm:ss"))<br/>
+                <b>(UTC) Last contact:</b> @(DateTimeOffset.FromUnixTimeSeconds(ThisMachine.LastContact).ToString("dd/MM/yyyy hh:mm:ss"))
+            </p>
+        </CardBody>
+    </Card>
+</div>
+
+<div style="padding-top: 12px;"></div>
+
+<Button Color="Color.Primary" Clicked="RegenerateToken">Regenerate token</Button>
+<Button Color="Color.Primary" Clicked="(_) => { clipboard.WriteTextAsync(ThisMachine.Token); }">Copy token</Button>
+<Button Color="Color.Primary" Clicked="CopyUrl">Copy url</Button>
+<style>
+@@media (min-width: 641px) {
+    .memoryCard{
+        max-width: 70%;
+    }
+}
+@@media (max-width: 640.98px) {
+    .memoryCard{
+        max-width: 100%;
+    }
+}
+</style>
+
+@code{
+
+    [Parameter]
+    public string Id { get; set; }
+
+    public Machine ThisMachine { get; set; }
+
+    private Func<Task> changed { get; set; }
+
+    public static Machine EmptyMachine { get; } = new Machine()
+    {
+        Info = new(),
+        MemoryInfo = new(),
+        OtherInfo = new(),
+    };
+
+    public LineChart<ulong> memoryLineChart { get; set; }
+    private bool reLabel { get; set; }
+
+    public LineChartDataset<ulong> usedMemoryData { get; set; } = UsedMemoryData();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (changed != null)
+        {
+            ThisMachine?.Changed?.Remove(changed);
+            reLabel = true;
+        }
+        changed = async () =>
+        {
+            await InvokeAsync(StateHasChanged);
+            await memoryLineChart.AddData(0, ThisMachine.MemoryInfo.Used / 1000 / 1000);
+            if (usedMemoryData.Data.Count > 20)
+            {
+                await memoryLineChart.ShiftData(0);
+                usedMemoryData.Data.RemoveAt(0);
+            }
+            await memoryLineChart.Update();
+        };
+        ThisMachine = await dash.GetMachineAsync(Id);
+        if (ThisMachine == null)
+            ThisMachine = EmptyMachine;
+        else
+            ThisMachine.Changed.Add(changed);
+    }
+
+    private async Task RegenerateToken()
+    {
+        ThisMachine.Token = AuthToken.Generate();
+        await ThisMachine.UpdateAsync();
+    }
+
+    private string FormatSize(ulong size)
+        => size switch
+        {
+            > (int)1e9 => Math.Round(size / 1e9d, 3) + "GB",
+            > (int)1e6 => Math.Round(size / 1e6d, 3) + "MB",
+            > (int)1e3 => Math.Round(size / 1e3d, 3) + "KB",
+            _ => size.ToString()};
+
+    public void Dispose()
+    {
+        ThisMachine?.Changed?.Remove(changed);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || reLabel)
+        {
+            await memoryLineChart.Clear();
+            usedMemoryData = UsedMemoryData();
+            List<string> labels = new List<string>(20);
+            for (int i = 0; i < 20; i++)
+                labels.Add(i.ToString());
+            await memoryLineChart.AddLabelsDatasetsAndUpdate(labels.ToArray(), usedMemoryData);
+            reLabel = false;
+        }
+    }
+
+    private Task CopyUrl()
+        => clipboard.WriteTextAsync(NavigationManager.BaseUri + $"api/machines/{ThisMachine.MachineId}/{ThisMachine.Token}");
+
+    private static LineChartDataset<ulong> UsedMemoryData()
+        => new()
+        {
+            Label = "sus",
+            Data = new(),
+            BackgroundColor = new string[] { ChartColor.FromRgba(255, 0, 0, 0.2f) },
+            BorderColor = new string[] { ChartColor.FromRgba(255, 0, 0, 0.2f) },
+            Fill = true,
+            PointRadius = 2,
+            BorderDash = new List<int> { },
+        };
+
+}

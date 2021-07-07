@@ -1,0 +1,19 @@
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.main {
+    flex: 1;
+    /*margin-left: 1.5rem;*/
+}
+
+.page {
+    flex-direction: row;
+}
+
+.main > div {
+    padding-left: 1rem !important;
+    padding-right: 0.5rem !important;
+}

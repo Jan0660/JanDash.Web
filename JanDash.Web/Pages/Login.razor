@@ -1,0 +1,42 @@
+﻿@page "/Login"
+@inject ILocalStorageService localStorage
+<h1>Login</h1>
+
+<Field>
+    <FieldLabel>Username</FieldLabel>
+    <TextEdit @ref="UserNameInput" Placeholder="Enter username..."/>
+</Field>
+<Field>
+    <FieldLabel>Password</FieldLabel>
+    <TextEdit @ref="PasswordInput" Placeholder="Enter password..." Role="TextRole.Password"/>
+</Field>
+
+<Text Color="TextColor.Danger">@failText</Text>
+
+<Button Color="Color.Primary" Clicked="LogIn">Log in</Button>
+<a href="/register">Don't have an account? Register.</a>
+
+@code {
+
+    public TextEdit UserNameInput { get; set; }
+    public TextEdit PasswordInput { get; set; }
+    private string failText { get; set; }
+
+    public async Task LogIn()
+    {
+        // TODO: fail on username doesnt exist
+        var user = Mongo.GetUserByUsername(UserNameInput.Text);
+        if (SecurePasswordHasher.Verify(PasswordInput.Text ?? "", user.Password))
+        {
+            var token = AuthToken.Generate();
+            user.Tokens.Add(token);
+            await localStorage.SetItemAsStringAsync("jandash-token", token);
+            await user.UpdateAsync();
+        }
+        else
+        {
+            failText = "Incorrect password.";
+        }
+    }
+
+}

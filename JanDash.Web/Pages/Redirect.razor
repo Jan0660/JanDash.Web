@@ -1,0 +1,15 @@
+@page "/redirect/{Url}"
+@inject JanDashService dash
+@inject NavigationManager NavigationManager
+
+@code
+{
+    [Parameter]
+    public string Url { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await dash.GetSelf();
+        NavigationManager.NavigateTo(Url);
+    }
+}

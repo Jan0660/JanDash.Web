@@ -1,0 +1,72 @@
+﻿@inherits LayoutComponentBase
+@inject JanDashService dash
+
+<div class="page">
+    @* <div class="sidebar"> *@
+    @* </div> *@
+        <Sidebar Data="@sidebarInfo" @ref="sidebar"/>
+
+    <div class="main app">
+        <div class="content">
+            <button @onclick="@ToggleSidebar">test button</button>
+            @Body
+        </div>
+    </div>
+</div>
+
+@code{
+    Sidebar sidebar;
+
+    SidebarInfo sidebarInfo = new SidebarInfo
+    {
+        Brand = new SidebarBrandInfo
+        {
+            Text = "JanDash", To = ""
+        },
+        Items = new List<SidebarItemInfo>
+        {
+            new SidebarItemInfo { To = "", Text = "Home" },
+            new SidebarItemInfo
+            {
+                Text = " amogus",
+                Icon = IconName.Bug,
+                SubItems = new List<SidebarItemInfo>
+                {
+                    new SidebarItemInfo { To = "/", Text = "Home" },
+                    new SidebarItemInfo { To = "/about", Text = "About" },
+                }
+            },
+        }
+    };
+
+    void ToggleSidebar()
+    {
+        sidebar.Toggle();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var self = await dash.GetSelf();
+            if (self != null)
+            {
+                var machines = await dash.GetMachinesAsync();
+                foreach(var machine in machines)
+                    sidebarInfo.Items.Add(new()
+                    {
+                        Text = machine.Name,
+                        To = $"machines/{machine.MachineId}"
+                    });
+                sidebarInfo.Items.Add(new()
+                {
+                    Text = " " + self.Username,
+                    Icon = IconName.User,
+                    To = "self"
+                });
+                StateHasChanged();
+            }
+        }
+    }
+
+}

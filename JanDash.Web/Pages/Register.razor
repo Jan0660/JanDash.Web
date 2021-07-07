@@ -1,0 +1,51 @@
+﻿@page "/Register"
+@using MongoDB.Bson
+@using MongoDB.Driver
+@using JanDash.Data
+@inject ILocalStorageService localStorage
+<h3>Register</h3>
+
+<Field>
+    <FieldLabel>Username</FieldLabel>
+    <TextEdit @ref="UserNameInput" Placeholder="Enter username..."/>
+</Field>
+<Field>
+    <FieldLabel>Password</FieldLabel>
+    <TextEdit @ref="PasswordInput" Placeholder="Enter password..." Role="TextRole.Password"/>
+</Field>
+<Field>
+    <FieldLabel>Confirm password</FieldLabel>
+    <TextEdit @ref="ConfirmPasswordInput" Placeholder="Confirm password..." Role="TextRole.Password"/>
+</Field>
+
+<Text Color="TextColor.Danger">@failText</Text>
+
+<Button Color="Color.Primary" Clicked="Registerr">Register</Button>
+
+@code {
+
+    private async Task Registerr()
+    {
+        if (PasswordInput.Text != ConfirmPasswordInput.Text)
+        {
+            failText = "Passwords don't match.";
+            return;
+        }
+        if ((await Mongo.UsersCollection.FindAsync(new BsonDocumentFilterDefinition<BsonDocument>(new BsonDocument("Username", UserNameInput.Text)))).Any())
+        {
+            failText = "Username already taken.";
+            return;
+        }
+        var user = new DashUser(UserNameInput.Text, PasswordInput.Text);
+        var token = AuthToken.Generate();
+        user.Tokens.Add(token);
+        await localStorage.SetItemAsStringAsync("jandash-token", token);
+        await Mongo.UsersCollection.InsertOneAsync(user.ToBsonDocument());
+    }
+
+    public TextEdit UserNameInput { get; set; }
+    public TextEdit PasswordInput { get; set; }
+    private string failText { get; set; }
+    public TextEdit ConfirmPasswordInput { get; set; }
+
+}

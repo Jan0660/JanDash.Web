@@ -1,0 +1,47 @@
+﻿@page "/"
+@inject JanDashService dash
+When anything???
+
+<Button Color="Color.Secondary" Clicked="NewMachineShow">New machine</Button>
+<Modal @ref="newMachineModal">
+    <ModalContent Centered="true">
+        <ModalHeader>
+            <ModalTitle>New machine</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>Name</FieldLabel>
+                <TextEdit @ref="NewMachineNameInput" Placeholder="Enter name..." />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Danger" Clicked="NewMachineHide">Cancel</Button>
+            <Button Color="Color.Primary" Clicked="NewMachine">Create</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+@code{
+    public Modal newMachineModal { get; set; }
+
+    public TextEdit NewMachineNameInput { get; set; }
+    private string failText { get; set; }
+
+    private void NewMachineShow()
+        => newMachineModal.Show();
+
+    private void NewMachineHide()
+        => newMachineModal.Hide();
+
+    private async Task NewMachine()
+    {
+        if (string.IsNullOrEmpty(NewMachineNameInput.Text))
+        {
+            failText = "Machine name cannot be empty.";
+            return;
+        }
+        await dash.NewMachine(NewMachineNameInput.Text);
+        NewMachineHide();
+    }
+
+}
