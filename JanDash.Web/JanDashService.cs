@@ -15,11 +15,23 @@ namespace JanDash
         private ILocalStorageService Storage { get; }
         private NavigationManager NavigationManager { get; }
         private DashUser SelfCached { get; set; }
+        public List<Func<Task>> Update { get; set; } = new();
 
         public JanDashService(ILocalStorageService localStorageService, NavigationManager navigationManager)
         {
             Console.WriteLine("JanDashService.ctor");
             (Storage, NavigationManager) = (localStorageService, navigationManager);
+        }
+
+        public void Updated()
+        {
+            Task.Factory.StartNew(async () =>
+            {
+                foreach (var up in Update)
+                {
+                    await up();
+                }
+            });
         }
 
         public async Task<DashUser> GetSelf(bool loginRedirect = true)
@@ -71,6 +83,12 @@ namespace JanDash
                 // todo: maybe do something else yeah
                 throw new Exception("Unauthorized.");
             return machine;
+        }
+
+        public async Task LogOut()
+        {
+            await Storage.RemoveItemAsync("jandash-token");
+            SelfCached = null;
         }
     }
 }

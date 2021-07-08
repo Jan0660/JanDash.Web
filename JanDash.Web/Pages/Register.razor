@@ -3,6 +3,8 @@
 @using MongoDB.Driver
 @using JanDash.Data
 @inject ILocalStorageService localStorage
+@inject JanDashService dash
+@inject NavigationManager NavigationManager
 <h3>Register</h3>
 
 <Field>
@@ -41,6 +43,8 @@
         user.Tokens.Add(token);
         await localStorage.SetItemAsStringAsync("jandash-token", token);
         await Mongo.UsersCollection.InsertOneAsync(user.ToBsonDocument());
+        dash.Updated();
+        NavigationManager.NavigateTo("/");
     }
 
     public TextEdit UserNameInput { get; set; }

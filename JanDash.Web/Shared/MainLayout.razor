@@ -1,10 +1,11 @@
-﻿@inherits LayoutComponentBase
+﻿@implements IDisposable
+@inherits LayoutComponentBase
 @inject JanDashService dash
 
 <div class="page">
     @* <div class="sidebar"> *@
     @* </div> *@
-        <Sidebar Data="@sidebarInfo" @ref="sidebar"/>
+    <Sidebar Data="@sidebarInfo" @ref="sidebar"/>
 
     <div class="main app">
         <div class="content">
@@ -17,27 +18,9 @@
 @code{
     Sidebar sidebar;
 
-    SidebarInfo sidebarInfo = new SidebarInfo
-    {
-        Brand = new SidebarBrandInfo
-        {
-            Text = "JanDash", To = ""
-        },
-        Items = new List<SidebarItemInfo>
-        {
-            new SidebarItemInfo { To = "", Text = "Home" },
-            new SidebarItemInfo
-            {
-                Text = " amogus",
-                Icon = IconName.Bug,
-                SubItems = new List<SidebarItemInfo>
-                {
-                    new SidebarItemInfo { To = "/", Text = "Home" },
-                    new SidebarItemInfo { To = "/about", Text = "About" },
-                }
-            },
-        }
-    };
+    SidebarInfo sidebarInfo = NewSidebarInfo();
+
+    private Func<Task> updatedFunc;
 
     void ToggleSidebar()
     {
@@ -48,25 +31,54 @@
     {
         if (firstRender)
         {
-            var self = await dash.GetSelf();
-            if (self != null)
-            {
-                var machines = await dash.GetMachinesAsync();
-                foreach(var machine in machines)
-                    sidebarInfo.Items.Add(new()
-                    {
-                        Text = machine.Name,
-                        To = $"machines/{machine.MachineId}"
-                    });
-                sidebarInfo.Items.Add(new()
-                {
-                    Text = " " + self.Username,
-                    Icon = IconName.User,
-                    To = "self"
-                });
-                StateHasChanged();
-            }
+            await RenderSideBar();
+            updatedFunc = RenderSideBar;
+            dash.Update.Add(updatedFunc);
         }
     }
+
+    private async Task RenderSideBar()
+    {
+        sidebarInfo = NewSidebarInfo();
+        sidebar = new() { Data = sidebarInfo };
+        var self = await dash.GetSelf();
+        if (self != null)
+        {
+            var machines = await dash.GetMachinesAsync();
+            foreach (var machine in machines)
+                sidebarInfo.Items.Add(new()
+                {
+                    Text = machine.Name,
+                    To = $"machines/{machine.MachineId}"
+                });
+            sidebarInfo.Items.Add(new()
+            {
+                Text = " " + self.Username,
+                Icon = IconName.User,
+                To = "self"
+            });
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        sidebar?.Dispose();
+        dash.Update.Remove(updatedFunc);
+    }
+
+    private static SidebarInfo NewSidebarInfo()
+        => new SidebarInfo
+        {
+            Brand = new SidebarBrandInfo
+            {
+                Text = "JanDash", To = ""
+            },
+            Items = new List<SidebarItemInfo>
+            {
+                new SidebarItemInfo { To = "", Text = "Home" },
+                new SidebarItemInfo { To = "/about", Text = "About" },
+            }
+        };
 
 }

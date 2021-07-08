@@ -1,6 +1,7 @@
 ﻿@page "/Self"
 @inject ILocalStorageService localStorage
 @inject JanDashService dash
+@inject NavigationManager NavigationManager
 <h1>You</h1>
 
 Profile shit when????????
@@ -44,8 +45,10 @@ log out all sessions when???
     {
         var self = await dash.GetSelf();
         self.Tokens.Remove(await localStorage.GetItemAsStringAsync("jandash-token"));
-        await localStorage.RemoveItemAsync("jandash-token");
+        await dash.LogOut();
         await self.UpdateAsync();
+        dash.Updated();
+        NavigationManager.NavigateTo("login");
     }
 
     private void ChangePasswordModal()

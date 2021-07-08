@@ -1,5 +1,7 @@
 ﻿@page "/Login"
 @inject ILocalStorageService localStorage
+@inject JanDashService dash
+@inject NavigationManager NavigationManager
 <h1>Login</h1>
 
 <Field>
@@ -32,6 +34,8 @@
             user.Tokens.Add(token);
             await localStorage.SetItemAsStringAsync("jandash-token", token);
             await user.UpdateAsync();
+            dash.Updated();
+            NavigationManager.NavigateTo("");
         }
         else
         {
