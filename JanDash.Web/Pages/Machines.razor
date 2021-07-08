@@ -23,7 +23,6 @@
             </ul>
 
             <LineChart @ref="memoryLineChart" TItem="ulong" OptionsObject="new { responsive = true, maintainAspectRatio = true }"/>
-            @* Style="width: 50%; height: 50%;" *@
         </CardBody>
     </Card>
 </div>
@@ -47,6 +46,7 @@
 <Button Color="Color.Primary" Clicked="RegenerateToken">Regenerate token</Button>
 <Button Color="Color.Primary" Clicked="(_) => { clipboard.WriteTextAsync(ThisMachine.Token); }">Copy token</Button>
 <Button Color="Color.Primary" Clicked="CopyUrl">Copy url</Button>
+<Button Color="Color.Danger" Clicked="DeleteMachine">Delete</Button>
 <style>
 @@media (min-width: 641px) {
     .memoryCard{
@@ -153,5 +153,12 @@
             PointRadius = 2,
             BorderDash = new List<int> { },
         };
+
+    private async Task DeleteMachine()
+    {
+        await ThisMachine.DeleteAsync();
+        dash.Updated();
+        NavigationManager.NavigateTo("");
+    }
 
 }

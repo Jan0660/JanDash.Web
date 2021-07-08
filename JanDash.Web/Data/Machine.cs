@@ -49,5 +49,11 @@ namespace JanDash.Data
                 }
             });
         }
+
+        public async Task DeleteAsync()
+        {
+            await Mongo.MachinesCollection.DeleteOneAsync(new BsonDocument("MachineId", MachineId));
+            Mongo.MachinesStore.Remove(this);
+        }
     }
 }
