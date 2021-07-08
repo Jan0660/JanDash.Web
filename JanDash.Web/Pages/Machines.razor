@@ -35,7 +35,8 @@
             <CardTitle>Other</CardTitle>
             <p>
                 <b>(UTC) Last boot:</b> @(DateTimeOffset.FromUnixTimeSeconds(ThisMachine.Info.BootTimestamp).ToString("dd/MM/yyyy hh:mm:ss"))<br/>
-                <b>(UTC) Last contact:</b> @(DateTimeOffset.FromUnixTimeSeconds(ThisMachine.LastContact).ToString("dd/MM/yyyy hh:mm:ss"))
+                <b>(UTC) Last contact:</b> @(DateTimeOffset.FromUnixTimeSeconds(ThisMachine.LastContact).ToString("dd/MM/yyyy hh:mm:ss"))<br/>
+                <b>Cpu Temperature</b> @ThisMachine.Info.CpuTemperature
             </p>
         </CardBody>
     </Card>

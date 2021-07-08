@@ -8,5 +8,6 @@ namespace JanDash.Data
         public ulong MemoryUsed { get; set; }
         public ulong MemoryFree { get; set; }
         public long BootTimestamp { get; set; }
+        public float CpuTemperature { get; set; }
     }
 }
